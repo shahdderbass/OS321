@@ -1,3 +1,8 @@
+/*
+	Shahd Derbass
+	2231172085
+	Lab06
+*/
 #include <stdio.h> 
 #include <unistd.h> 
  
