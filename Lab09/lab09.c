@@ -1,3 +1,9 @@
+/*
+ * Shahd Derbass
+ * ID: 2231172085
+ * Lab09
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,70 +29,68 @@ typedef struct {
 	int used;
 } disk_block;
 
-superblock sb;
+superblock *sb;
 inode *inodes;
 disk_block *blocks;
 
 void create_fs() {
-	
-	// set superblock info
-    	sb.total_inodes = 10;
-    	sb.total_blocks = 100;
-    	sb.status = 1; // file system created
+
+    	// allocate superblock
+    	sb = (superblock *)malloc(sizeof(superblock));
+
+    	// set superblock info
+    	sb->total_inodes = 10;
+    	sb->total_blocks = 100;
+    	sb->status = 1;
 
     	// allocate memory
     	inodes = (inode *)malloc(10 * sizeof(inode));
     	blocks = (disk_block *)malloc(100 * sizeof(disk_block));
 
-    	// check if allocation worked
-    	if (inodes == NULL || blocks == NULL) {
+    	// check allocation
+    	if (sb == NULL || inodes == NULL || blocks == NULL) {
         	printf("Error: Memory allocation failed\n");
         	exit(1);
     	}
 
     	// initialize inodes
     	for (int i = 0; i < 10; i++) {
-        	strcpy(inodes[i].name, "Shahd");
+        	inodes[i].used = 0;
         	inodes[i].size = 0;
-    		inodes[i].used = 0;
-		inodes[i].block_count = 0;
+        	inodes[i].block_count = 0;
 
         	for (int j = 0; j < 100; j++) {
-            		inodes[i].blocks[j] = -1; // no blocks assigned
+            		inodes[i].blocks[j] = -1;
         	}
     	}
 
     	// initialize disk blocks
     	for (int i = 0; i < 100; i++) {
         	blocks[i].used = 0;
-		memset(blocks[i].data, 0, BLOCK_SIZE); // clear data
+        	memset(blocks[i].data, 0, BLOCK_SIZE);
     	}
 
     	printf("File system created successfully\n");
 }
 
-
-
 void sync_fs() {
     	FILE *fp;
 
-    	// open file for writing
     	fp = fopen("file_data", "wb");
     	if (fp == NULL) {
         	printf("Error: Could not open file\n");
         	return;
     	}
 
-    	// write superblock
-    	fwrite(&sb, sizeof(superblock), 1, fp);
+    	// write superblock (FIXED)
+    	fwrite(sb, sizeof(superblock), 1, fp);
 
     	// write inodes
     	fwrite(inodes, sizeof(inode), 10, fp);
 
-    	// write disk blocks 
+    	// write disk blocks
     	fwrite(blocks, sizeof(disk_block), 100, fp);
 
-    	// close file
     	fclose(fp);
 
     	printf("File system saved to disk (file_data)\n");
@@ -96,10 +100,10 @@ void print_fs() {
 
     	// ===== FILE SYSTEM INFO =====
     	printf("===== FILE SYSTEM INFO =====\n");
-    	printf("Number of inodes: %d\n", sb.total_inodes);
-    	printf("Number of blocks: %d\n", sb.total_blocks);
-	
-	printf("\n");
+    	printf("Number of inodes: %d\n", sb->total_inodes);
+    	printf("Number of blocks: %d\n", sb->total_blocks);
+
+    	printf("\n");
 
     	// ===== INODES =====
     	printf("===== INODES =====\n");
@@ -109,7 +113,7 @@ void print_fs() {
         	if (inodes[i].used == 0) {
             		printf("[%d] Name: EMPTY\n", i);
         	}
-	       	else {
+        	else {
             		printf("[%d] Name: %s Size: %d Blocks: %d\n",
                    		i,
                    		inodes[i].name,
@@ -117,7 +121,8 @@ void print_fs() {
                    		inodes[i].block_count);
         	}
     	}
-	printf("\n");
+
+    	printf("\n");
 
     	// ===== BLOCK USAGE =====
     	printf("===== BLOCK USAGE =====\n");
@@ -142,20 +147,23 @@ void print_fs() {
 void mount_fs() {
     	FILE *fp;
 
-    	fp = fopen("file_data", "rb");  // read binary
+    	fp = fopen("file_data", "rb");
     	if (fp == NULL) {
         	printf("Error: Could not open file_data\n");
         	return;
     	}
 
-    	// read superblock
-    	fread(&sb, sizeof(superblock), 1, fp);
+    	// allocate superblock
+    	sb = (superblock *)malloc(sizeof(superblock));
 
-    	// allocate memory again
+    	// read superblock (FIXED)
+    	fread(sb, sizeof(superblock), 1, fp);
+
+    	// allocate memory
     	inodes = (inode *)malloc(10 * sizeof(inode));
     	blocks = (disk_block *)malloc(100 * sizeof(disk_block));
 
-    	if (inodes == NULL || blocks == NULL) {
+    	if (sb == NULL || inodes == NULL || blocks == NULL) {
         	printf("Error: Memory allocation failed\n");
         	return;
     	}
@@ -167,7 +175,7 @@ void mount_fs() {
     	fread(blocks, sizeof(disk_block), 100, fp);
 
     	fclose(fp);
-
+	
     	printf("File system mounted successfully\n");
 }
 
@@ -207,8 +215,8 @@ int allocate_file(char *name) {
     	// initialize file
     	inodes[index].size = 0;
     	inodes[index].block_count = 0;
-	
-    	for (int i = 0; i < 10; i++) {
+
+    	for (int i = 0; i < 100; i++) {   // 
         	inodes[index].blocks[i] = -1;
     	}
 
@@ -306,22 +314,22 @@ int main() {
     	
 	// create + save
 	create_fs();
-    	sync_fs();
+ 	sync_fs();
     	
 	// load system
-	mount_fs();
+//	mount_fs();
 	
 	// create multiple files
 	int f1 = allocate_file("first");
 	int f2 = allocate_file("second");
 	
 	// set sizes
-	set_filesize(f1, 500); 
-	set_filesize(f2, 500);
+	set_filesize(f1, 5000); 
+	set_filesize(f2, 5000);
 
 	// write data	
-	write_byte(f1, 10, "S");
-	write_byte(f2, 20, "D");
+	write_byte(f1, 0, "S");
+	write_byte(f2, 0, "D");
 	
 	// save again
     	sync_fs();
