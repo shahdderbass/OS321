@@ -82,7 +82,7 @@ void sync_fs() {
         	return;
     	}
 
-    	// write superblock (FIXED)
+    	// write superblock
     	fwrite(sb, sizeof(superblock), 1, fp);
 
     	// write inodes
@@ -156,7 +156,7 @@ void mount_fs() {
     	// allocate superblock
     	sb = (superblock *)malloc(sizeof(superblock));
 
-    	// read superblock (FIXED)
+    	// read superblock 
     	fread(sb, sizeof(superblock), 1, fp);
 
     	// allocate memory
@@ -216,7 +216,7 @@ int allocate_file(char *name) {
     	inodes[index].size = 0;
     	inodes[index].block_count = 0;
 
-    	for (int i = 0; i < 100; i++) {   // 
+    	for (int i = 0; i < 100; i++) {    
         	inodes[index].blocks[i] = -1;
     	}
 
@@ -259,7 +259,6 @@ void set_filesize(int filenum, int size) {
         	}
     	}
 
-    	// need FEWER blocks
     	else if (blocks_needed < current_blocks) {
 
         	for (int i = blocks_needed; i < current_blocks; i++) {
@@ -304,7 +303,7 @@ void write_byte(int filenum, int pos, char *data) {
     	// offset inside block
     	int offset = pos % BLOCK_SIZE;
 
-    	// write data (first character)
+    	// write data 
     	blocks[block_num].data[offset] = data[0];
 
     	printf("Data written successfully to file %d\n", filenum);
